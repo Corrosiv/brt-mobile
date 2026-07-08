@@ -1,188 +1,143 @@
 ﻿# BRT Schedule Backend API
 
-Servidor backend para la aplicación móvil de consulta de horarios del BRT.
+Backend del sistema BRT para consultar estaciones, rutas y horarios usando Node.js, Express y SQLite.
 
-## 📋 Stack Tecnológico
+## Stack tecnológico
 
-- **Node.js** - Runtime JavaScript
-- **Express.js** - Framework web
-- **SQLite** - Base de datos local
-- **Cors** - Cross-Origin Resource Sharing
-- **Winston** - Logging
-- **Jest** - Testing
-- **Nodemon** - Auto-reload en desarrollo
+- Node.js
+- Express.js
+- SQLite
+- CORS
+- Joi
+- Winston
+- Jasmine
+- Nodemon
 
-## 🚀 Inicio Rápido
+## Inicio rápido
 
-### Instalación de dependencias
-
-\\\ash
+```bash
 npm install
-\\\
-
-### Inicializar base de datos
-
-\\\ash
 npm run init-db
-\\\
+npm run seed
+npm start
+```
 
-### Ejecutar en desarrollo
+Servidor disponible en:
 
-\\\ash
+```text
+http://localhost:3000
+```
+
+Para desarrollo:
+
+```bash
 npm run dev
-\\\
+```
 
-El servidor estará disponible en: **http://localhost:3000**
+## Estructura del proyecto
 
-## 📁 Estructura del Proyecto
+```text
+brt-backend/
+├── src/
+│   ├── config/
+│   │   ├── constants.js
+│   │   └── database.js
+│   ├── controllers/
+│   │   ├── estacionController.js
+│   │   ├── horarioController.js
+│   │   └── rutaController.js
+│   ├── database/
+│   │   ├── init.js
+│   │   ├── init.sql
+│   │   ├── seed.js
+│   │   ├── seed.sql
+│   │   ├── populate-buses.js
+│   │   ├── populate-camiones.js
+│   │   ├── populate-estacion-ruta.js
+│   │   └── brt-schedule.db
+│   ├── middleware/
+│   │   └── errorHandler.js
+│   ├── models/
+│   │   ├── ApiResponse.js
+│   │   ├── Camion.js
+│   │   ├── Estacion.js
+│   │   ├── EstacionRuta.js
+│   │   ├── Horario.js
+│   │   └── Ruta.js
+│   ├── routes/
+│   │   ├── estaciones.js
+│   │   └── rutas.js
+│   ├── services/
+│   │   ├── CamionService.js
+│   │   ├── EstacionService.js
+│   │   ├── HorarioService.js
+│   │   └── RutaService.js
+│   ├── utils/
+│   │   └── validators.js
+│   └── index.js
+└── package.json
+```
 
-\\\
-src/
-├── index.js                 # Punto de entrada
-├── config/
-│   └── database.js         # Configuración SQLite
-├── routes/
-│   └── estaciones.js       # Rutas de estaciones
-├── controllers/
-│   ├── estacionController.js
-│   └── horarioController.js
-├── services/
-│   ├── EstacionService.js
-│   └── HorarioService.js
-├── models/
-│   ├── Estacion.js
-│   ├── Ruta.js
-│   ├── Horario.js
-│   └── ApiResponse.js
-├── middleware/
-│   └── errorHandler.js
-├── utils/
-│   └── validators.js
-└── database/
-    ├── init.sql           # Schema
-    ├── seed.sql           # Datos de prueba
-    ├── init.js            # Script de inicialización
-    └── brt-schedule.db    # Base de datos (generado)
-\\\
+## Scripts disponibles
 
-## 🔌 Endpoints API
-
-### Buscar Estaciones
-
-\\\
-GET /api/estaciones/search?q=Tecn
-\\\
-
-**Response:**
-\\\json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "nombre": "Tecnológico",
-      "latitud": 4.6426,
-      "longitud": -74.0833,
-      "descripcion": "Parada cercana a Universidad"
-    }
-  ],
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
-\\\
-
-### Próximas Llegadas
-
-\\\
-GET /api/estaciones/1/proximas-llegadas
-\\\
-
-**Response:**
-\\\json
-{
-  "success": true,
-  "data": {
-    "estacion": {
-      "id": 1,
-      "nombre": "Tecnológico",
-      "latitud": 4.6426,
-      "longitud": -74.0833
-    },
-    "horarios": [
-      {
-        "id": 1,
-        "ruta": "Troncal 1",
-        "tipoRuta": "Troncal",
-        "hora": "06:00"
-      }
-    ]
-  },
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
-\\\
-
-### Obtener Todas las Estaciones
-
-\\\
-GET /api/estaciones
-\\\
-
-### Obtener Detalles de Estación
-
-\\\
-GET /api/estaciones/1
-\\\
-
-### Horarios por Día
-
-\\\
-GET /api/estaciones/1/horarios?dia=0
-\\\
-
-## 📝 Scripts Disponibles
-
-| Script | Descripción |
-|--------|-------------|
-| \
-pm start\ | Ejecutar servidor en producción |
-| \
-pm run dev\ | Ejecutar servidor en desarrollo (con hot reload) |
-| \
-pm test\ | Ejecutar tests |
-| \
-pm run lint\ | Verificar estilo de código |
-| \
-pm run init-db\ | Inicializar base de datos |
-| \
-pm run seed\ | Popular datos de prueba |
-
-## 🧪 Testing
-
-\\\ash
+```bash
+npm start
+npm run dev
+npm run init-db
+npm run seed
+npm run populate-buses
+npm run populate-camiones
+npm run populate-estacion-ruta
 npm test
-npm run test:coverage
-\\\
+npm run test:watch
+npm run lint
+npm run lint:fix
+```
 
-## 📚 Documentación
+## Endpoints principales
 
-- [API Specification](./docs/API.md)
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Contributing](./CONTRIBUTING.md)
+```text
+GET  /
+GET  /health
+GET  /api/estaciones
+GET  /api/estaciones/search?q=
+GET  /api/estaciones/:id
+GET  /api/estaciones/:id/proximas-llegadas?limit=5&offset=0
+GET  /api/estaciones/:id/horarios?dia=0
+GET  /api/rutas
+GET  /api/rutas/:id
+```
 
-## 🔒 Variables de Entorno
+## Ejemplos
 
-Crea un archivo \.env\ en la raíz del proyecto:
+Buscar estaciones:
 
-\\\
+```bash
+curl "http://localhost:3000/api/estaciones/search?q=Centro"
+```
+
+Verificar estado del servicio:
+
+```bash
+curl "http://localhost:3000/health"
+```
+
+## Variables de entorno
+
+Crea un archivo `.env` en `brt-backend/` si necesitas personalizar la configuración:
+
+```env
 NODE_ENV=development
 PORT=3000
-DATABASE=./src/database/brt-schedule.db
 LOG_LEVEL=debug
-\\\
+```
 
-## 👥 Contribuciones
+## Notas
 
-Léé [CONTRIBUTING.md](./CONTRIBUTING.md) para instrucciones.
+- La base de datos SQLite se genera en `src/database/brt-schedule.db`.
+- El proyecto raíz ya no incluye Flutter; este repositorio está documentado como backend-only.
+- La rama actual usa `npm test` con Jasmine.
 
-## 📄 Licencia
+## Licencia
 
 MIT
