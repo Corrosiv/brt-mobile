@@ -1,0 +1,37 @@
+{
+  "name": "brt-schedule-backend",
+  "version": "1.0.0",
+  "description": "BRT Schedule API Backend - MVP",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jasmine",
+    "test:watch": "jasmine --watch",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "seed": "node src/database/seed.js",
+    "populate-buses": "node src/database/populate-buses.js",
+    "populate-camiones": "node src/database/populate-camiones.js",
+    "populate-estacion-ruta": "node src/database/populate-estacion-ruta.js",
+    "init-db": "node src/database/init.js"
+  },
+  "keywords": ["brt", "schedule", "api", "express", "sqlite"],
+  "author": "Team BRT",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "joi": "^17.11.0",
+    "sqlite": "^5.0.1",
+    "sqlite3": "^5.1.6",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.54.0",
+    "jasmine": "^5.1.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
+  }
+}

@@ -1,0 +1,41 @@
+﻿# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build
+dist/
+build/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Plan de ejecución (local tracking)
+PLAN_EJECUCION.md

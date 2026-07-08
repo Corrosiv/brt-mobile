@@ -1,0 +1,55 @@
+# =========================
+# BRT Mobile Monorepo .gitignore
+# =========================
+
+# Flutter
+build/
+flutter_export_environment.sh
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# Backend
+brt-backend/node_modules/
+brt-backend/.env
+brt-backend/npm-debug.log*
+brt-backend/package-lock.json
+brt-backend/*.db
+brt-backend/*.sqlite
+brt-backend/*.sqlite3
+
+# Android
+brt-frontend/android/app/debug/
+brt-frontend/android/app/release/
+brt-frontend/.gradle/
+
+# iOS
+brt-frontend/ios/Flutter/Flutter.framework
+brt-frontend/ios/Flutter/Flutter.podspec
+
+# IDE
+.vscode/
+.idea/
+.vs/
+**/.vs/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.iml

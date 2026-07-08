@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRT Manual Test UI</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #1d4ed8;
+      --primary-soft: #dbeafe;
+      --border: #d1d5db;
+      --danger: #b91c1c;
+      --success: #166534;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      color: white;
+      padding: 24px 16px;
+    }
+    header .wrap, main {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header h1 { margin: 0 0 8px; font-size: 1.8rem; }
+    header p { margin: 0; opacity: 0.92; }
+    main {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    input, button, select {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font: inherit;
+      padding: 10px 12px;
+    }
+    input, select { flex: 1 1 220px; }
+    button {
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+    button.secondary {
+      background: white;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    button:disabled { opacity: 0.65; cursor: wait; }
+    .status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border: 1px solid #bfdbfe;
+      white-space: pre-wrap;
+    }
+    .status.error {
+      background: #fef2f2;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+    .status.success {
+      background: #f0fdf4;
+      color: var(--success);
+      border-color: #bbf7d0;
+    }
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+    .item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+    .item.selected {
+      border-color: #93c5fd;
+      background: var(--primary-soft);
+    }
+    .item h3, .item h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+    .item p { margin: 4px 0; color: var(--muted); }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .muted { color: var(--muted); }
+    pre {
+      margin: 0;
+      overflow: auto;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+    }
+    .empty {
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>BRT Manual Test UI</h1>
+      <p>Use this browser page to search stations and inspect upcoming arrivals without Flutter.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid">
+      <div class="card">
+        <h2>System</h2>
+        <div class="row" style="margin-bottom: 8px;">
+          <button id="healthBtn">Check health</button>
+          <button id="loadStationsBtn" class="secondary">Load all stations</button>
+          <button id="loadRoutesBtn" class="secondary">Load routes</button>
+        </div>
+        <div id="systemStatus" class="status">Ready.</div>
+      </div>
+
+      <div class="card">
+        <h2>Search stations</h2>
+        <div class="row">
+          <input id="searchInput" type="text" placeholder="Type a station name" />
+          <button id="searchBtn">Search</button>
+        </div>
+        <div id="searchStatus" class="meta">Search stations by name.</div>
+        <ul id="stationList" class="list" style="margin-top: 12px;"></ul>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Selected station</h2>
+        <div id="selectedStationEmpty" class="empty">Select a station to view arrivals.</div>
+        <div id="selectedStationPanel" style="display:none;">
+          <div class="meta" id="selectedStationMeta"></div>
+          <div class="row" style="margin-bottom: 10px;">
+            <button id="loadArrivalsBtn">Load upcoming arrivals</button>
+            <button id="clearSelectionBtn" class="secondary">Clear selection</button>
+          </div>
+          <div id="arrivalsStatus" class="meta"></div>
+          <ul id="arrivalsList" class="list"></ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Routes</h2>
+        <div id="routesStatus" class="meta">Load routes from the API.</div>
+        <ul id="routesList" class="list"></ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Raw response</h2>
+      <div id="rawStatus" class="meta">Responses will appear here for quick debugging.</div>
+      <pre id="rawOutput">{}</pre>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      selectedStation: null,
+      searchResults: [],
+      lastResponse: null,
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(el, message, type = '') {
+      el.className = type ? `status ${type}` : 'status';
+      el.textContent = message;
+    }
+
+    function setMeta(el, message) {
+      el.textContent = message;
+    }
+
+    function showRaw(data) {
+      state.lastResponse = data;
+      $('rawOutput').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function requestJson(path) {
+      const response = await fetch(path, { headers: { 'Accept': 'application/json' } });
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(`Unexpected response from ${path}`);
+      }
+      if (!response.ok || data.success === false) {
+        throw new Error(data.error || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    function renderStations(stations) {
+      const list = $('stationList');
+      list.innerHTML = '';
+      if (!stations.length) {
+        list.innerHTML = '<li class="empty">No stations found.</li>';
+        return;
+      }
+
+      for (const station of stations) {
+        const li = document.createElement('li');
+        li.className = 'item' + (state.selectedStation?.id === station.id ? ' selected' : '');
+        li.innerHTML = `
+          <h3>${escapeHtml(station.nombre || 'Unnamed station')}</h3>
+          <p><span class="pill">ID ${escapeHtml(String(station.id))}</span> <span class="pill">${escapeHtml(station.codigo || 'N/A')}</span></p>
+          <p>${escapeHtml(station.descripcion || 'No description')}</p>
+          <p class="muted">Lat: ${formatNumber(station.latitud)} · Lng: ${formatNumber(station.longitud)}</p>
+        `;
+        li.addEventListener('click', () => selectStation(station));
+        list.appendChild(li);
+      }
+    }
+
+    function renderRoutes(routes) {
+      const list = $('routesList');
+      list.innerHTML = '';
+      if (!routes.length) {
+        list.innerHTML = '<li class="empty">No routes found.</li>';
+        return;
+      }
+
+      for (const route of routes) {
+        const li = document.createElement('li');
+        li.className = 'item';
+        li.innerHTML = `
+          <h3>${escapeHtml(route.numero || '')} ${escapeHtml(route.nombre || 'Unnamed route')}</h3>
+          <p>${escapeHtml(route.descripcion || 'No description')}</p>
+          <p class="muted">Station start: ${route.estacion_inicial ?? route.estacionInicial ?? 'N/A'} · Station end: ${route.estacion_final ?? route.estacionFinal ?? 'N/A'}</p>
+        `;
+        list.appendChild(li);
+      }
+    }
+
+    function renderArrivals(arrivals) {
+      const list = $('arrivalsList');
+      list.innerHTML = '';
+      if (!arrivals.length) {
+        list.innerHTML = '<li class="empty">No upcoming arrivals found.</li>';
+        return;
+      }
+
+      for (const arrival of arrivals) {
+        const route = arrival.ruta || {};
+        const camion = arrival.camion || {};
+        const minutes = arrival.tiempo_restante_minutos ?? arrival.minutos_hasta ?? 'N/A';
+        const eta = arrival.hora_estimada_llegada || arrival.horaEstimada || arrival.hora_estimada || 'N/A';
+        const li = document.createElement('li');
+        li.className = 'item';
+        li.innerHTML = `
+          <h3>${escapeHtml(route.nombre || camion.numero || 'Arrival')}</h3>
+          <p><span class="pill">Bus ${escapeHtml(String(camion.numero || camion.id || 'N/A'))}</span> <span class="pill">${escapeHtml(String(minutes))} min</span></p>
+          <p>ETA: ${escapeHtml(String(eta))}</p>
+        `;
+        list.appendChild(li);
+      }
+    }
+
+    async function searchStations() {
+      const query = $('searchInput').value.trim();
+      if (!query) {
+        setMeta($('searchStatus'), 'Enter a station name to search.');
+        state.searchResults = [];
+        renderStations(state.searchResults);
+        return;
+      }
+
+      setMeta($('searchStatus'), 'Searching...');
+      $('searchBtn').disabled = true;
+      try {
+        const data = await requestJson(`/api/estaciones/search?q=${encodeURIComponent(query)}`);
+        state.searchResults = Array.isArray(data.data) ? data.data : [];
+        renderStations(state.searchResults);
+        setMeta($('searchStatus'), `Found ${state.searchResults.length} station(s).`);
+        showRaw(data);
+      } catch (error) {
+        state.searchResults = [];
+        renderStations(state.searchResults);
+        setMeta($('searchStatus'), error.message);
+      } finally {
+        $('searchBtn').disabled = false;
+      }
+    }
+
+    async function loadStations() {
+      setStatus($('systemStatus'), 'Loading stations...', '');
+      $('loadStationsBtn').disabled = true;
+      try {
+        const data = await requestJson('/api/estaciones');
+        state.searchResults = Array.isArray(data.data) ? data.data : [];
+        renderStations(state.searchResults);
+        setStatus($('systemStatus'), `Loaded ${state.searchResults.length} station(s).`, 'success');
+        showRaw(data);
+      } catch (error) {
+        state.searchResults = [];
+        setStatus($('systemStatus'), error.message, 'error');
+      } finally {
+        $('loadStationsBtn').disabled = false;
+      }
+    }
+
+    async function loadRoutes() {
+      setMeta($('routesStatus'), 'Loading routes...');
+      $('loadRoutesBtn').disabled = true;
+      try {
+        const data = await requestJson('/api/rutas');
+        const routes = Array.isArray(data.data) ? data.data : [];
+        renderRoutes(routes);
+        setMeta($('routesStatus'), `Loaded ${routes.length} route(s).`);
+        showRaw(data);
+      } catch (error) {
+        setMeta($('routesStatus'), error.message);
+      } finally {
+        $('loadRoutesBtn').disabled = false;
+      }
+    }
+
+    async function checkHealth() {
+      setStatus($('systemStatus'), 'Checking health...', '');
+      $('healthBtn').disabled = true;
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        setStatus($('systemStatus'), `Backend is healthy: ${data.status || 'OK'}`, 'success');
+        showRaw(data);
+      } catch (error) {
+        setStatus($('systemStatus'), error.message, 'error');
+      } finally {
+        $('healthBtn').disabled = false;
+      }
+    }
+
+    function selectStation(station) {
+      state.selectedStation = station;
+      $('selectedStationEmpty').style.display = 'none';
+      $('selectedStationPanel').style.display = 'block';
+      setMeta($('selectedStationMeta'), `${station.nombre} · ${station.codigo || 'N/A'} · ID ${station.id}`);
+      renderStations(state.searchResults);
+      setMeta($('arrivalsStatus'), 'Load upcoming arrivals for this station.');
+      $('arrivalsList').innerHTML = '';
+      showRaw(station);
+    }
+
+    async function loadArrivals() {
+      if (!state.selectedStation) {
+        setMeta($('arrivalsStatus'), 'Select a station first.');
+        return;
+      }
+
+      setMeta($('arrivalsStatus'), 'Loading upcoming arrivals...');
+      $('loadArrivalsBtn').disabled = true;
+      try {
+        const data = await requestJson(`/api/estaciones/${state.selectedStation.id}/proximas-llegadas?limit=10&offset=0`);
+        const payload = data.data || {};
+        const arrivals = payload.proximas_llegadas || payload.proximasLlegadas || [];
+        renderArrivals(arrivals);
+        setMeta($('arrivalsStatus'), `Loaded ${arrivals.length} upcoming arrival(s).`);
+        showRaw(data);
+      } catch (error) {
+        setMeta($('arrivalsStatus'), error.message);
+      } finally {
+        $('loadArrivalsBtn').disabled = false;
+      }
+    }
+
+    function clearSelection() {
+      state.selectedStation = null;
+      $('selectedStationEmpty').style.display = 'block';
+      $('selectedStationPanel').style.display = 'none';
+      renderStations(state.searchResults);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function formatNumber(value) {
+      const num = Number(value);
+      return Number.isFinite(num) ? num.toFixed(5) : 'N/A';
+    }
+
+    $('searchBtn').addEventListener('click', searchStations);
+    $('searchInput').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') searchStations();
+    });
+    $('healthBtn').addEventListener('click', checkHealth);
+    $('loadStationsBtn').addEventListener('click', loadStations);
+    $('loadRoutesBtn').addEventListener('click', loadRoutes);
+    $('loadArrivalsBtn').addEventListener('click', loadArrivals);
+    $('clearSelectionBtn').addEventListener('click', clearSelection);
+
+    loadStations();
+    loadRoutes();
+  </script>
+</body>
+</html>
