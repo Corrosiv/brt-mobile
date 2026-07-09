@@ -83,7 +83,7 @@ class CamionService {
       const ahora = new Date();
       const horaActualMinutos = ahora.getHours() * 60 + ahora.getMinutes();
 
-      console.log(`[CamionService DEBUG] obtenerProximosLlegadas estacion_id=${estacion_id}, horaActual=${ahora.getHours()}:${String(ahora.getMinutes()).padStart(2,'0')} (${horaActualMinutos} min)`);
+      console.log(`[CamionService DEBUG] obtenerPróximasLlegadas estación_id=${estacion_id}, horaActual=${ahora.getHours()}:${String(ahora.getMinutes()).padStart(2,'0')} (${horaActualMinutos} min)`);
 
       // Obtener todas las rutas
       const rutasQuery = 'SELECT * FROM rutas';
@@ -93,7 +93,7 @@ class CamionService {
           return;
         }
 
-        console.log(`[CamionService DEBUG] Found ${rutas.length} rutas`);
+        console.log(`[CamionService DEBUG] Se encontraron ${rutas.length} rutas`);
 
         // Arreglar array de próximos camiones
         const proximosCamiones = [];
@@ -111,7 +111,7 @@ class CamionService {
         rutas.forEach((ruta) => {
           const estacionesRuta = estacionesRutaMap.get(ruta.id) || [];
 
-          console.log(`[CamionService DEBUG] Ruta ${ruta.id}: ${estacionesRuta.length} estaciones en map`);
+          console.log(`[CamionService DEBUG] Ruta ${ruta.id}: ${estacionesRuta.length} estaciones en el mapa`);
 
           // Obtener camiones de la ruta
           this.obtenerPorRuta(ruta.id).then((camionesRuta) => {
@@ -129,7 +129,7 @@ class CamionService {
               // Convertir ETA a minutos para comparar
               const etaMinutos = this.horaAMinutos(eta);
 
-              console.log(`[CamionService DEBUG] Camión ${camion.numero}: ETA=${eta} (${etaMinutos} min), actual=${horaActualMinutos} min`);
+              console.log(`[CamionService DEBUG] Camión ${camion.numero}: hora estimada de llegada=${eta} (${etaMinutos} min), hora actual=${horaActualMinutos} min`);
 
               // Filtrar solo camiones cuya ETA es mayor a la hora actual
               if (etaMinutos > horaActualMinutos) {
@@ -142,7 +142,7 @@ class CamionService {
                   tiempo_restante_minutos: etaMinutos - horaActualMinutos
                 });
               } else {
-                console.log(`[CamionService DEBUG] Camión ${camion.numero}: ETA ya pasó`);
+                console.log(`[CamionService DEBUG] Camión ${camion.numero}: la hora estimada de llegada ya pasó`);
               }
             }
 
@@ -159,7 +159,7 @@ class CamionService {
               const total = proximosCamiones.length;
               const paginados = proximosCamiones.slice(offset, offset + limit);
 
-              console.log(`[CamionService DEBUG] Total camiones encontrados: ${total}, devolviendo: ${paginados.length}`);
+              console.log(`[CamionService DEBUG] Total de camiones encontrados: ${total}, devolviendo: ${paginados.length}`);
 
               resolve({
                 data: paginados,

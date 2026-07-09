@@ -16,7 +16,7 @@ const horarioController = {
       const limit = parseInt(req.query.limit) || 5;
       const offset = parseInt(req.query.offset) || 0;
 
-      console.log(`[DEBUG] obtenerProximasLlegadas - estacion_id: ${id}, limit: ${limit}, offset: ${offset}`);
+      console.log(`[DEBUG] obtenerPróximasLlegadas - estación_id: ${id}, límite: ${limit}, desplazamiento: ${offset}`);
 
       // Validar parámetros
       if (isNaN(limit) || limit < 1) {
@@ -47,7 +47,7 @@ const horarioController = {
       // Obtener todas las estaciones por ruta para cálculo de ETA
       const estacionesRutaMap = await rutaService.obtenerTodasEstacionesPorRuta();
 
-      console.log(`[DEBUG] estacionesRutaMap size: ${estacionesRutaMap.size}`);
+      console.log(`[DEBUG] tamaño del mapa de estaciones por ruta: ${estacionesRutaMap.size}`);
       for (const [rutaId, estaciones] of estacionesRutaMap) {
         console.log(`[DEBUG]   Ruta ${rutaId}: ${estaciones.length} estaciones`);
       }
@@ -55,7 +55,7 @@ const horarioController = {
       // Obtener próximos camiones
       const resultado = await camionService.obtenerProximosLlegadas(id, estacionesRutaMap, limit, offset);
 
-      console.log(`[DEBUG] Resultado: ${resultado.data.length} buses, total: ${resultado.pagination.total}`);
+      console.log(`[DEBUG] Resultado: ${resultado.data.length} camiones, total: ${resultado.pagination.total}`);
 
       res.json(
         ApiResponse.success({
