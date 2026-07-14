@@ -11,6 +11,8 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "seed": "node src/database/seed.js",
+    "seed:juarez": "node src/database/seed-juarez-bus.js",
+    "seed:complete": "node src/database/seed-juarez-complete.js",
     "populate-buses": "node src/database/populate-buses.js",
     "populate-camiones": "node src/database/populate-camiones.js",
     "populate-estacion-ruta": "node src/database/populate-estacion-ruta.js",

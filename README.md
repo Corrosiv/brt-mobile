@@ -43,7 +43,7 @@ brt-mobile/
 cd brt-backend
 npm install
 npm run init-db
-npm run seed
+npm run seed:complete
 npm start
 ```
 
