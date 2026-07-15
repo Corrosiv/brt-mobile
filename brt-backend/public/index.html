@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BRT Manual Test UI</title>
+  <title>Logística Analítica de Transporte Ecológico (LATE)</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <style>
     :root {
       color-scheme: light;
@@ -11,8 +17,8 @@
       --panel: #ffffff;
       --text: #1f2937;
       --muted: #6b7280;
-      --primary: #1d4ed8;
-      --primary-soft: #dbeafe;
+      --primary: #0f766e;
+      --primary-soft: #ccfbf1;
       --border: #d1d5db;
       --danger: #b91c1c;
       --success: #166534;
@@ -25,26 +31,35 @@
       color: var(--text);
     }
     header {
-      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      background: linear-gradient(135deg, #0f766e, #14b8a6);
       color: white;
-      padding: 24px 16px;
+      padding: 20px 16px;
     }
-    header .wrap, main {
-      max-width: 1100px;
+    header .wrap,
+    main {
+      max-width: 1240px;
       margin: 0 auto;
     }
-    header h1 { margin: 0 0 8px; font-size: 1.8rem; }
-    header p { margin: 0; opacity: 0.92; }
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 1.65rem;
+    }
+    header p {
+      margin: 0;
+      opacity: 0.95;
+    }
     main {
       padding: 16px;
-      display: grid;
-      gap: 16px;
-      grid-template-columns: 1fr;
     }
-    .grid {
+    .layout {
       display: grid;
       gap: 16px;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      align-items: start;
+    }
+    .left {
+      display: grid;
+      gap: 16px;
     }
     .card {
       background: var(--panel);
@@ -54,26 +69,24 @@
       box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
     .card h2 {
-      margin: 0 0 12px;
-      font-size: 1.1rem;
-    }
-    .meta {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-bottom: 8px;
+      margin: 0 0 10px;
+      font-size: 1.05rem;
     }
     .row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
     }
-    input, button, select {
+    input,
+    button {
       border-radius: 10px;
       border: 1px solid var(--border);
       font: inherit;
       padding: 10px 12px;
     }
-    input, select { flex: 1 1 220px; }
+    input {
+      flex: 1 1 220px;
+    }
     button {
       cursor: pointer;
       background: var(--primary);
@@ -86,25 +99,18 @@
       color: var(--text);
       border-color: var(--border);
     }
-    button:disabled { opacity: 0.65; cursor: wait; }
-    .status {
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #eff6ff;
-      color: #1e3a8a;
-      border: 1px solid #bfdbfe;
-      white-space: pre-wrap;
+    button.small {
+      padding: 7px 10px;
+      font-size: 0.86rem;
     }
-    .status.error {
-      background: #fef2f2;
-      color: var(--danger);
-      border-color: #fecaca;
+    button:disabled {
+      opacity: 0.65;
+      cursor: wait;
     }
-    .status.success {
-      background: #f0fdf4;
-      color: var(--success);
-      border-color: #bbf7d0;
+    .meta {
+      color: var(--muted);
+      font-size: 0.93rem;
+      margin: 8px 0;
     }
     .list {
       list-style: none;
@@ -112,6 +118,8 @@
       margin: 0;
       display: grid;
       gap: 10px;
+      max-height: 370px;
+      overflow: auto;
     }
     .item {
       border: 1px solid var(--border);
@@ -119,15 +127,19 @@
       padding: 12px;
       background: #fff;
     }
+    .item h3 {
+      margin: 0 0 6px;
+      font-size: 0.98rem;
+    }
+    .item p {
+      margin: 4px 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
     .item.selected {
-      border-color: #93c5fd;
+      border-color: #2dd4bf;
       background: var(--primary-soft);
     }
-    .item h3, .item h4 {
-      margin: 0 0 6px;
-      font-size: 1rem;
-    }
-    .item p { margin: 4px 0; color: var(--muted); }
     .pill {
       display: inline-block;
       border-radius: 999px;
@@ -135,302 +147,133 @@
       font-size: 0.8rem;
       background: #e5e7eb;
       color: #111827;
-    }
-    .muted { color: var(--muted); }
-    pre {
-      margin: 0;
-      overflow: auto;
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 0.9rem;
+      margin-right: 6px;
     }
     .empty {
-      padding: 16px;
+      padding: 14px;
       border: 1px dashed var(--border);
       border-radius: 12px;
       color: var(--muted);
       text-align: center;
+      background: #fff;
+    }
+    .result {
+      border: 1px solid #99f6e4;
+      background: #f0fdfa;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .map-card {
+      height: calc(100vh - 140px);
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .legend {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .map-card {
+        height: 420px;
+        min-height: 420px;
+      }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <h1>BRT Manual Test UI</h1>
-      <p>Use this browser page to search stations and inspect upcoming arrivals without Flutter.</p>
+      <h1>Logística Analítica de Transporte Ecológico (LATE)</h1>
+      <p>Planificador de viaje entre estaciones con tiempo estimado, próxima salida y llegada.</p>
     </div>
   </header>
 
   <main>
-    <section class="grid">
-      <div class="card">
-        <h2>System</h2>
-        <div class="row" style="margin-bottom: 8px;">
-          <button id="healthBtn">Check health</button>
-          <button id="loadStationsBtn" class="secondary">Load all stations</button>
-          <button id="loadRoutesBtn" class="secondary">Load routes</button>
-        </div>
-        <div id="systemStatus" class="status">Ready.</div>
-      </div>
-
-      <div class="card">
-        <h2>Search stations</h2>
-        <div class="row">
-          <input id="searchInput" type="text" placeholder="Type a station name" />
-          <button id="searchBtn">Search</button>
-        </div>
-        <div id="searchStatus" class="meta">Search stations by name.</div>
-        <ul id="stationList" class="list" style="margin-top: 12px;"></ul>
-      </div>
-    </section>
-
-    <section class="grid">
-      <div class="card">
-        <h2>Selected station</h2>
-        <div id="selectedStationEmpty" class="empty">Select a station to view arrivals.</div>
-        <div id="selectedStationPanel" style="display:none;">
-          <div class="meta" id="selectedStationMeta"></div>
-          <div class="row" style="margin-bottom: 10px;">
-            <button id="loadArrivalsBtn">Load upcoming arrivals</button>
-            <button id="clearSelectionBtn" class="secondary">Clear selection</button>
+    <section class="layout">
+      <div class="left">
+        <div class="card">
+          <h2>Buscar estaciones</h2>
+          <div class="row">
+            <input id="searchInput" type="text" placeholder="Escribe el nombre de una estación" />
+            <button id="searchBtn">Buscar</button>
+            <button id="showAllBtn" class="secondary">Ver todas</button>
           </div>
-          <div id="arrivalsStatus" class="meta"></div>
-          <ul id="arrivalsList" class="list"></ul>
+          <div id="searchStatus" class="meta">Selecciona origen y destino para calcular la ruta.</div>
+          <ul id="stationList" class="list"></ul>
+        </div>
+
+        <div class="card">
+          <h2>Trayecto</h2>
+          <p id="selectedOrigin" class="meta">Origen: no seleccionado</p>
+          <p id="selectedDestination" class="meta">Destino: no seleccionado</p>
+          <div class="row" style="margin-bottom: 8px;">
+            <button id="planBtn">Calcular viaje</button>
+            <button id="clearBtn" class="secondary">Limpiar</button>
+          </div>
+          <div id="planStatus" class="meta">Sin cálculo todavía.</div>
+          <div id="results"></div>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Routes</h2>
-        <div id="routesStatus" class="meta">Load routes from the API.</div>
-        <ul id="routesList" class="list"></ul>
+      <div class="card map-card">
+        <h2>Mapa de estaciones</h2>
+        <div id="map"></div>
+        <div class="legend">
+          <span>● Gris: estación</span>
+          <span>● Verde: origen</span>
+          <span>● Azul: destino</span>
+        </div>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>Raw response</h2>
-      <div id="rawStatus" class="meta">Responses will appear here for quick debugging.</div>
-      <pre id="rawOutput">{}</pre>
     </section>
   </main>
 
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
   <script>
     const state = {
-      selectedStation: null,
+      allStations: [],
       searchResults: [],
-      lastResponse: null,
+      routes: [],
+      routeDetails: new Map(),
+      arrivalsCache: new Map(),
+      origin: null,
+      destination: null,
+      map: null,
+      markers: new Map(),
+      nowMinutes: 0,
     };
 
     const $ = (id) => document.getElementById(id);
 
-    function setStatus(el, message, type = '') {
-      el.className = type ? `status ${type}` : 'status';
-      el.textContent = message;
-    }
-
-    function setMeta(el, message) {
-      el.textContent = message;
-    }
-
-    function showRaw(data) {
-      state.lastResponse = data;
-      $('rawOutput').textContent = JSON.stringify(data, null, 2);
-    }
-
     async function requestJson(path) {
-      const response = await fetch(path, { headers: { 'Accept': 'application/json' } });
-      const text = await response.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error(`Unexpected response from ${path}`);
-      }
+      const response = await fetch(path, { headers: { Accept: 'application/json' } });
+      const data = await response.json();
       if (!response.ok || data.success === false) {
-        throw new Error(data.error || `Request failed (${response.status})`);
+        throw new Error(data.error || `Error HTTP ${response.status}`);
       }
       return data;
     }
 
-    function renderStations(stations) {
-      const list = $('stationList');
-      list.innerHTML = '';
-      if (!stations.length) {
-        list.innerHTML = '<li class="empty">No stations found.</li>';
-        return;
-      }
-
-      for (const station of stations) {
-        const li = document.createElement('li');
-        li.className = 'item' + (state.selectedStation?.id === station.id ? ' selected' : '');
-        li.innerHTML = `
-          <h3>${escapeHtml(station.nombre || 'Unnamed station')}</h3>
-          <p><span class="pill">ID ${escapeHtml(String(station.id))}</span> <span class="pill">${escapeHtml(station.codigo || 'N/A')}</span></p>
-          <p>${escapeHtml(station.descripcion || 'No description')}</p>
-          <p class="muted">Lat: ${formatNumber(station.latitud)} · Lng: ${formatNumber(station.longitud)}</p>
-        `;
-        li.addEventListener('click', () => selectStation(station));
-        list.appendChild(li);
-      }
-    }
-
-    function renderRoutes(routes) {
-      const list = $('routesList');
-      list.innerHTML = '';
-      if (!routes.length) {
-        list.innerHTML = '<li class="empty">No routes found.</li>';
-        return;
-      }
-
-      for (const route of routes) {
-        const li = document.createElement('li');
-        li.className = 'item';
-        li.innerHTML = `
-          <h3>${escapeHtml(route.numero || '')} ${escapeHtml(route.nombre || 'Unnamed route')}</h3>
-          <p>${escapeHtml(route.descripcion || 'No description')}</p>
-          <p class="muted">Station start: ${route.estacion_inicial ?? route.estacionInicial ?? 'N/A'} · Station end: ${route.estacion_final ?? route.estacionFinal ?? 'N/A'}</p>
-        `;
-        list.appendChild(li);
-      }
-    }
-
-    function renderArrivals(arrivals) {
-      const list = $('arrivalsList');
-      list.innerHTML = '';
-      if (!arrivals.length) {
-        list.innerHTML = '<li class="empty">No upcoming arrivals found.</li>';
-        return;
-      }
-
-      for (const arrival of arrivals) {
-        const route = arrival.ruta || {};
-        const camion = arrival.camion || {};
-        const minutes = arrival.tiempo_restante_minutos ?? arrival.minutos_hasta ?? 'N/A';
-        const eta = arrival.hora_estimada_llegada || arrival.horaEstimada || arrival.hora_estimada || 'N/A';
-        const li = document.createElement('li');
-        li.className = 'item';
-        li.innerHTML = `
-          <h3>${escapeHtml(route.nombre || camion.numero || 'Arrival')}</h3>
-          <p><span class="pill">Bus ${escapeHtml(String(camion.numero || camion.id || 'N/A'))}</span> <span class="pill">${escapeHtml(String(minutes))} min</span></p>
-          <p>ETA: ${escapeHtml(String(eta))}</p>
-        `;
-        list.appendChild(li);
-      }
-    }
-
-    async function searchStations() {
-      const query = $('searchInput').value.trim();
-      if (!query) {
-        setMeta($('searchStatus'), 'Enter a station name to search.');
-        state.searchResults = [];
-        renderStations(state.searchResults);
-        return;
-      }
-
-      setMeta($('searchStatus'), 'Searching...');
-      $('searchBtn').disabled = true;
-      try {
-        const data = await requestJson(`/api/estaciones/search?q=${encodeURIComponent(query)}`);
-        state.searchResults = Array.isArray(data.data) ? data.data : [];
-        renderStations(state.searchResults);
-        setMeta($('searchStatus'), `Found ${state.searchResults.length} station(s).`);
-        showRaw(data);
-      } catch (error) {
-        state.searchResults = [];
-        renderStations(state.searchResults);
-        setMeta($('searchStatus'), error.message);
-      } finally {
-        $('searchBtn').disabled = false;
-      }
-    }
-
-    async function loadStations() {
-      setStatus($('systemStatus'), 'Loading stations...', '');
-      $('loadStationsBtn').disabled = true;
-      try {
-        const data = await requestJson('/api/estaciones');
-        state.searchResults = Array.isArray(data.data) ? data.data : [];
-        renderStations(state.searchResults);
-        setStatus($('systemStatus'), `Loaded ${state.searchResults.length} station(s).`, 'success');
-        showRaw(data);
-      } catch (error) {
-        state.searchResults = [];
-        setStatus($('systemStatus'), error.message, 'error');
-      } finally {
-        $('loadStationsBtn').disabled = false;
-      }
-    }
-
-    async function loadRoutes() {
-      setMeta($('routesStatus'), 'Loading routes...');
-      $('loadRoutesBtn').disabled = true;
-      try {
-        const data = await requestJson('/api/rutas');
-        const routes = Array.isArray(data.data) ? data.data : [];
-        renderRoutes(routes);
-        setMeta($('routesStatus'), `Loaded ${routes.length} route(s).`);
-        showRaw(data);
-      } catch (error) {
-        setMeta($('routesStatus'), error.message);
-      } finally {
-        $('loadRoutesBtn').disabled = false;
-      }
-    }
-
-    async function checkHealth() {
-      setStatus($('systemStatus'), 'Checking health...', '');
-      $('healthBtn').disabled = true;
-      try {
-        const response = await fetch('/health');
-        const data = await response.json();
-        setStatus($('systemStatus'), `Backend is healthy: ${data.status || 'OK'}`, 'success');
-        showRaw(data);
-      } catch (error) {
-        setStatus($('systemStatus'), error.message, 'error');
-      } finally {
-        $('healthBtn').disabled = false;
-      }
-    }
-
-    function selectStation(station) {
-      state.selectedStation = station;
-      $('selectedStationEmpty').style.display = 'none';
-      $('selectedStationPanel').style.display = 'block';
-      setMeta($('selectedStationMeta'), `${station.nombre} · ${station.codigo || 'N/A'} · ID ${station.id}`);
-      renderStations(state.searchResults);
-      setMeta($('arrivalsStatus'), 'Load upcoming arrivals for this station.');
-      $('arrivalsList').innerHTML = '';
-      showRaw(station);
-    }
-
-    async function loadArrivals() {
-      if (!state.selectedStation) {
-        setMeta($('arrivalsStatus'), 'Select a station first.');
-        return;
-      }
-
-      setMeta($('arrivalsStatus'), 'Loading upcoming arrivals...');
-      $('loadArrivalsBtn').disabled = true;
-      try {
-        const data = await requestJson(`/api/estaciones/${state.selectedStation.id}/proximas-llegadas?limit=10&offset=0`);
-        const payload = data.data || {};
-        const arrivals = payload.proximas_llegadas || payload.proximasLlegadas || [];
-        renderArrivals(arrivals);
-        setMeta($('arrivalsStatus'), `Loaded ${arrivals.length} upcoming arrival(s).`);
-        showRaw(data);
-      } catch (error) {
-        setMeta($('arrivalsStatus'), error.message);
-      } finally {
-        $('loadArrivalsBtn').disabled = false;
-      }
-    }
-
-    function clearSelection() {
-      state.selectedStation = null;
-      $('selectedStationEmpty').style.display = 'block';
-      $('selectedStationPanel').style.display = 'none';
-      renderStations(state.searchResults);
+    function setMeta(id, message) {
+      $(id).textContent = message;
     }
 
     function escapeHtml(value) {
@@ -442,23 +285,434 @@
         .replaceAll("'", '&#39;');
     }
 
-    function formatNumber(value) {
-      const num = Number(value);
-      return Number.isFinite(num) ? num.toFixed(5) : 'N/A';
+    function toMinutes(timeText) {
+      if (!timeText || typeof timeText !== 'string' || !timeText.includes(':')) return null;
+      const [h, m] = timeText.split(':').map(Number);
+      if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+      return h * 60 + m;
+    }
+
+    function toHHMM(minutes) {
+      const safe = ((minutes % 1440) + 1440) % 1440;
+      const h = Math.floor(safe / 60);
+      const m = safe % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function formatMinutes(minutes) {
+      return `${Math.max(0, Math.round(minutes))} min`;
+    }
+
+    function stationName(id) {
+      const station = state.allStations.find((s) => s.id === id);
+      return station ? station.nombre : `Estación ${id}`;
+    }
+
+    function updateSelectedLabels() {
+      setMeta('selectedOrigin', `Origen: ${state.origin ? state.origin.nombre : 'no seleccionado'}`);
+      setMeta('selectedDestination', `Destino: ${state.destination ? state.destination.nombre : 'no seleccionado'}`);
+    }
+
+    function clearResults() {
+      $('results').innerHTML = '';
+      setMeta('planStatus', 'Sin cálculo todavía.');
+    }
+
+    function markerColor(stationId) {
+      if (state.origin && state.origin.id === stationId) return '#16a34a';
+      if (state.destination && state.destination.id === stationId) return '#2563eb';
+      return '#6b7280';
+    }
+
+    function renderMap(stations) {
+      if (!state.map) return;
+
+      if (state.markers.size) {
+        for (const marker of state.markers.values()) {
+          state.map.removeLayer(marker);
+        }
+      }
+      state.markers.clear();
+
+      const valid = stations.filter((s) => Number.isFinite(Number(s.latitud)) && Number.isFinite(Number(s.longitud)));
+      for (const station of valid) {
+        const marker = L.circleMarker([Number(station.latitud), Number(station.longitud)], {
+          radius: 7,
+          color: markerColor(station.id),
+          fillColor: markerColor(station.id),
+          fillOpacity: 0.85,
+          weight: 1,
+        });
+        marker.bindPopup(`<strong>${escapeHtml(station.nombre)}</strong><br/>ID ${station.id}`);
+        marker.on('click', () => marker.openPopup());
+        marker.addTo(state.map);
+        state.markers.set(station.id, marker);
+      }
+
+      if (!valid.length) return;
+      const bounds = L.latLngBounds(valid.map((s) => [Number(s.latitud), Number(s.longitud)]));
+      state.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+    }
+
+    function renderStations(stations) {
+      const list = $('stationList');
+      list.innerHTML = '';
+
+      if (!stations.length) {
+        list.innerHTML = '<li class="empty">No se encontraron estaciones.</li>';
+        renderMap([]);
+        return;
+      }
+
+      for (const station of stations) {
+        const li = document.createElement('li');
+        const selected = state.origin?.id === station.id || state.destination?.id === station.id;
+        li.className = `item${selected ? ' selected' : ''}`;
+
+        li.innerHTML = `
+          <h3>${escapeHtml(station.nombre || 'Estación sin nombre')}</h3>
+          <p><span class="pill">ID ${escapeHtml(String(station.id))}</span></p>
+          <p>${escapeHtml(station.descripcion || 'Sin descripción')}</p>
+          <div class="row" style="margin-top: 8px;">
+            <button class="small" data-role="origin">Usar como origen</button>
+            <button class="small secondary" data-role="destination">Usar como destino</button>
+          </div>
+        `;
+
+        li.querySelector('[data-role="origin"]').addEventListener('click', () => {
+          state.origin = station;
+          updateSelectedLabels();
+          clearResults();
+          renderStations(state.searchResults);
+        });
+
+        li.querySelector('[data-role="destination"]').addEventListener('click', () => {
+          state.destination = station;
+          updateSelectedLabels();
+          clearResults();
+          renderStations(state.searchResults);
+        });
+
+        list.appendChild(li);
+      }
+
+      renderMap(stations);
+    }
+
+    function buildRouteGraph(routePayload) {
+      const route = routePayload.ruta || {};
+      const stations = Array.isArray(routePayload.estaciones) ? routePayload.estaciones : [];
+      const ordered = stations
+        .slice()
+        .sort((a, b) => Number(a.orden ?? 0) - Number(b.orden ?? 0))
+        .map((item) => ({
+          estacion_id: item.id,
+          orden: Number(item.orden ?? 0),
+          tiempo_promedio_minutos: Number(item.tiempo_promedio_minutos ?? 0),
+        }));
+
+      const indexByStation = new Map();
+      const cumulative = [];
+      let acc = 0;
+      for (let i = 0; i < ordered.length; i++) {
+        cumulative[i] = acc;
+        indexByStation.set(ordered[i].estacion_id, i);
+        acc += Number.isFinite(ordered[i].tiempo_promedio_minutos) ? ordered[i].tiempo_promedio_minutos : 0;
+      }
+
+      return {
+        id: route.id,
+        nombre: route.nombre || `Ruta ${route.id}`,
+        ordered,
+        indexByStation,
+        cumulative,
+      };
+    }
+
+    function travelMinutes(routeDetail, fromId, toId) {
+      const fromIdx = routeDetail.indexByStation.get(fromId);
+      const toIdx = routeDetail.indexByStation.get(toId);
+      if (fromIdx === undefined || toIdx === undefined || fromIdx >= toIdx) return null;
+      return routeDetail.cumulative[toIdx] - routeDetail.cumulative[fromIdx];
+    }
+
+    async function getArrivals(stationId) {
+      if (state.arrivalsCache.has(stationId)) {
+        return state.arrivalsCache.get(stationId);
+      }
+      const data = await requestJson(`/api/estaciones/${stationId}/proximas-llegadas?limit=100&offset=0`);
+      const payload = data.data || {};
+      const arrivals = Array.isArray(payload.proximas_llegadas) ? payload.proximas_llegadas : [];
+      const normalized = arrivals.map((a) => {
+        const etaText = a.hora_estimada_llegada || a.horaEstimada || a.hora_estimada || null;
+        const etaMinutes = toMinutes(etaText);
+        const routeId = Number(a.ruta?.id ?? a.camion?.ruta_id ?? 0);
+        return {
+          routeId,
+          etaText,
+          etaMinutes,
+          busNumber: a.camion?.numero || a.camion?.id || 'N/D',
+        };
+      }).filter((a) => Number.isFinite(a.etaMinutes) && a.etaMinutes > state.nowMinutes);
+
+      state.arrivalsCache.set(stationId, normalized);
+      return normalized;
+    }
+
+    async function findNextArrival(stationId, routeId, minDepartureMinutes) {
+      const arrivals = await getArrivals(stationId);
+      const filtered = arrivals
+        .filter((a) => a.routeId === Number(routeId) && a.etaMinutes >= minDepartureMinutes)
+        .sort((a, b) => a.etaMinutes - b.etaMinutes);
+      return filtered[0] || null;
+    }
+
+    function collectDirectCandidates() {
+      const result = [];
+      for (const detail of state.routeDetails.values()) {
+        const travel = travelMinutes(detail, state.origin.id, state.destination.id);
+        if (travel === null) continue;
+        result.push({
+          type: 'directa',
+          routeA: detail,
+          transferStationId: null,
+          routeB: null,
+          travelA: travel,
+          travelB: 0,
+        });
+      }
+      return result;
+    }
+
+    function collectTransferCandidates() {
+      const result = [];
+      const details = [...state.routeDetails.values()];
+
+      for (const routeA of details) {
+        const originIdx = routeA.indexByStation.get(state.origin.id);
+        if (originIdx === undefined) continue;
+
+        for (const routeB of details) {
+          if (routeA.id === routeB.id) continue;
+          const destIdx = routeB.indexByStation.get(state.destination.id);
+          if (destIdx === undefined) continue;
+
+          for (const stationA of routeA.ordered) {
+            const transferId = stationA.estacion_id;
+            const transferIdxA = routeA.indexByStation.get(transferId);
+            const transferIdxB = routeB.indexByStation.get(transferId);
+            if (transferIdxA === undefined || transferIdxB === undefined) continue;
+            if (originIdx >= transferIdxA) continue;
+            if (transferIdxB >= destIdx) continue;
+
+            const travelA = travelMinutes(routeA, state.origin.id, transferId);
+            const travelB = travelMinutes(routeB, transferId, state.destination.id);
+            if (travelA === null || travelB === null) continue;
+
+            result.push({
+              type: 'transbordo',
+              routeA,
+              transferStationId: transferId,
+              routeB,
+              travelA,
+              travelB,
+            });
+          }
+        }
+      }
+
+      return result;
+    }
+
+    async function evaluateCandidate(candidate) {
+      const firstDeparture = await findNextArrival(state.origin.id, candidate.routeA.id, state.nowMinutes + 1);
+      if (!firstDeparture) return null;
+
+      if (candidate.type === 'directa') {
+        const finalEtaMinutes = firstDeparture.etaMinutes + candidate.travelA;
+        return {
+          type: 'Directa',
+          summary: `${candidate.routeA.nombre}`,
+          transfer: null,
+          departure: firstDeparture,
+          totalMinutes: finalEtaMinutes - state.nowMinutes,
+          finalEtaMinutes,
+          finalEtaText: toHHMM(finalEtaMinutes),
+        };
+      }
+
+      const transferArrivalMinutes = firstDeparture.etaMinutes + candidate.travelA;
+      const secondDeparture = await findNextArrival(candidate.transferStationId, candidate.routeB.id, transferArrivalMinutes);
+      if (!secondDeparture) return null;
+
+      const finalEtaMinutes = secondDeparture.etaMinutes + candidate.travelB;
+      return {
+        type: 'Con 1 transbordo',
+        summary: `${candidate.routeA.nombre} → ${candidate.routeB.nombre}`,
+        transfer: stationName(candidate.transferStationId),
+        departure: firstDeparture,
+        totalMinutes: finalEtaMinutes - state.nowMinutes,
+        finalEtaMinutes,
+        finalEtaText: toHHMM(finalEtaMinutes),
+      };
+    }
+
+    function renderTripResults(results) {
+      const container = $('results');
+      container.innerHTML = '';
+
+      if (!results.length) {
+        setMeta('planStatus', 'Sin salidas disponibles para el trayecto seleccionado.');
+        container.innerHTML = '<div class="empty">No hay buses futuros para este origen y destino.</div>';
+        return;
+      }
+
+      setMeta('planStatus', `Se encontraron ${results.length} opción(es).`);
+
+      for (const item of results) {
+        const div = document.createElement('div');
+        div.className = 'result';
+        div.innerHTML = `
+          <strong>${escapeHtml(item.type)} · ${escapeHtml(item.summary)}</strong>
+          <p>Tiempo total estimado: ${escapeHtml(formatMinutes(item.totalMinutes))}</p>
+          <p>Próxima salida: ${escapeHtml(item.departure.etaText)} · Bus ${escapeHtml(String(item.departure.busNumber))}</p>
+          <p>Hora estimada de llegada: ${escapeHtml(item.finalEtaText)}</p>
+          ${item.transfer ? `<p>Transbordo en: ${escapeHtml(item.transfer)}</p>` : ''}
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    async function calculateTrip() {
+      if (!state.origin || !state.destination) {
+        setMeta('planStatus', 'Debes seleccionar origen y destino.');
+        return;
+      }
+      if (state.origin.id === state.destination.id) {
+        setMeta('planStatus', 'Origen y destino deben ser diferentes.');
+        return;
+      }
+
+      $('planBtn').disabled = true;
+      setMeta('planStatus', 'Calculando opciones de viaje...');
+      $('results').innerHTML = '';
+
+      try {
+        state.nowMinutes = (new Date().getHours() * 60) + new Date().getMinutes();
+        state.arrivalsCache.clear();
+
+        const candidates = [
+          ...collectDirectCandidates(),
+          ...collectTransferCandidates(),
+        ];
+
+        const evaluated = [];
+        for (const candidate of candidates) {
+          const option = await evaluateCandidate(candidate);
+          if (option && option.totalMinutes >= 0) {
+            evaluated.push(option);
+          }
+        }
+
+        const unique = [];
+        const seen = new Set();
+        for (const option of evaluated.sort((a, b) => a.totalMinutes - b.totalMinutes)) {
+          const key = `${option.type}|${option.summary}|${option.finalEtaText}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          unique.push(option);
+        }
+
+        renderTripResults(unique.slice(0, 8));
+      } catch (error) {
+        setMeta('planStatus', error.message || 'No se pudo calcular el viaje.');
+      } finally {
+        $('planBtn').disabled = false;
+      }
+    }
+
+    async function searchStations() {
+      const query = $('searchInput').value.trim();
+      if (!query) {
+        state.searchResults = state.allStations.slice();
+        renderStations(state.searchResults);
+        setMeta('searchStatus', `Mostrando ${state.searchResults.length} estaciones.`);
+        return;
+      }
+
+      $('searchBtn').disabled = true;
+      setMeta('searchStatus', 'Buscando estaciones...');
+      try {
+        const data = await requestJson(`/api/estaciones/search?q=${encodeURIComponent(query)}`);
+        state.searchResults = Array.isArray(data.data) ? data.data : [];
+        renderStations(state.searchResults);
+        setMeta('searchStatus', `Se encontraron ${state.searchResults.length} estaciones.`);
+      } catch (error) {
+        state.searchResults = [];
+        renderStations(state.searchResults);
+        setMeta('searchStatus', error.message);
+      } finally {
+        $('searchBtn').disabled = false;
+      }
+    }
+
+    async function loadData() {
+      setMeta('searchStatus', 'Cargando estaciones y rutas...');
+
+      const stationResponse = await requestJson('/api/estaciones');
+      state.allStations = Array.isArray(stationResponse.data) ? stationResponse.data : [];
+      state.searchResults = state.allStations.slice();
+
+      const routesResponse = await requestJson('/api/rutas');
+      state.routes = Array.isArray(routesResponse.data) ? routesResponse.data : [];
+
+      state.routeDetails.clear();
+      for (const route of state.routes) {
+        const detailResponse = await requestJson(`/api/rutas/${route.id}`);
+        const detail = buildRouteGraph(detailResponse.data || {});
+        state.routeDetails.set(detail.id, detail);
+      }
+
+      setMeta('searchStatus', `Listo. ${state.allStations.length} estaciones disponibles.`);
+      renderStations(state.searchResults);
+    }
+
+    function clearSelection() {
+      state.origin = null;
+      state.destination = null;
+      state.arrivalsCache.clear();
+      updateSelectedLabels();
+      clearResults();
+      renderStations(state.searchResults);
+    }
+
+    function initMap() {
+      state.map = L.map('map', { zoomControl: true }).setView([4.6097, -74.0817], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(state.map);
     }
 
     $('searchBtn').addEventListener('click', searchStations);
     $('searchInput').addEventListener('keydown', (event) => {
       if (event.key === 'Enter') searchStations();
     });
-    $('healthBtn').addEventListener('click', checkHealth);
-    $('loadStationsBtn').addEventListener('click', loadStations);
-    $('loadRoutesBtn').addEventListener('click', loadRoutes);
-    $('loadArrivalsBtn').addEventListener('click', loadArrivals);
-    $('clearSelectionBtn').addEventListener('click', clearSelection);
+    $('showAllBtn').addEventListener('click', () => {
+      $('searchInput').value = '';
+      state.searchResults = state.allStations.slice();
+      renderStations(state.searchResults);
+      setMeta('searchStatus', `Mostrando ${state.searchResults.length} estaciones.`);
+    });
+    $('planBtn').addEventListener('click', calculateTrip);
+    $('clearBtn').addEventListener('click', clearSelection);
 
-    loadStations();
-    loadRoutes();
+    updateSelectedLabels();
+    initMap();
+    loadData().catch((error) => {
+      setMeta('searchStatus', error.message || 'No se pudieron cargar los datos iniciales.');
+      $('stationList').innerHTML = '<li class="empty">No fue posible cargar estaciones.</li>';
+    });
   </script>
 </body>
 </html>

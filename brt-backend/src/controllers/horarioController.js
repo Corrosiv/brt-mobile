@@ -12,11 +12,17 @@ const rutaService = new RutaService(db);
 const horarioController = {
   async obtenerProximasLlegadas(req, res, next) {
     try {
-      const { id } = req.params;
+      const id = parseInt(req.params.id);
       const limit = parseInt(req.query.limit) || 5;
       const offset = parseInt(req.query.offset) || 0;
 
       console.log(`[DEBUG] obtenerPróximasLlegadas - estación_id: ${id}, límite: ${limit}, desplazamiento: ${offset}`);
+
+      if (isNaN(id)) {
+        return res.status(400).json(
+          ApiResponse.error("Parámetro id inválido", "INVALID_ID")
+        );
+      }
 
       // Validar parámetros
       if (isNaN(limit) || limit < 1) {
