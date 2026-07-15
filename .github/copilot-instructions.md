@@ -7,5 +7,8 @@
 - Use 'dev' instead of 'master' as the primary branch name.
 - Use 'main' and 'dev' branches instead of 'master'.
 
+## Code Style
+- Al recibir parámetros de ruta en Express (req.params), siempre convertir a número con parseInt() antes de usarlos en comparaciones estrictas (===) con valores numéricos de la base de datos (SQLite), ya que req.params entrega strings.
+
 ## Localization Preferences
 - Keep test and debug output in clear Spanish, translating English terms like 'map' and 'ETA' when possible.
